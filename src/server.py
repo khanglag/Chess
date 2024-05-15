@@ -4,7 +4,7 @@ import pickle
 
 # Cấu hình server
 HOST = socket.gethostbyname(socket.gethostname())
-PORT = 8080
+PORT = 5050
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((HOST, PORT))
@@ -20,6 +20,8 @@ def handle_client(conn, addr):
             if not data:
                 break
             broadcast(data, conn)
+            decoded_data = pickle.loads(data)  # Giải mã dữ liệu
+            print(f"Dữ liệu từ {addr}: {decoded_data}")
         except:
             clients.remove(conn)
             conn.close()
