@@ -1,8 +1,8 @@
+import socket
 import threading
 import pygame
 import sys
 import engine
-import socket
 import pickle
 
 WIDTH = HEIGHT = 512
@@ -11,46 +11,66 @@ SQ_SIZE = HEIGHT // DIMENSION
 MAX_FPS = 15
 IMAGES = {}
 
-# Cấu hình client
-HOST = '192.168.1.20'
-PORT = 5050
-
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect((HOST, PORT))
-
-def receive_data():
-    while True:
-        try:
-            data = client.recv(4096)
-            if data:
-                print(pickle.loads(data))
-                handle_network_move(pickle.loads(data))
-        except:
-            print("Mất kết nối với server")
-            client.close()
-            break
-
-def send_data(data):
-    client.send(pickle.dumps(data))
-
-def handle_network_move(move):
-    global gs, moveMade, animate
-    gs.makeMove(move)
-    moveMade = True
-    animate = True
-
 def loadImages():
     pieces = ['wp', 'wR', 'wN', 'wB', 'wK', 'wQ', 'bp', 'bR', 'bN', 'bB', 'bK', 'bQ']
     for piece in pieces:
         IMAGES[piece] = pygame.transform.scale(pygame.image.load("images/" + piece + ".png"), (SQ_SIZE, SQ_SIZE))
 
+def menu(screen):
+    while True:
+        background_image = pygame.transform.scale(pygame.image.load("images/background.png"), (WIDTH, HEIGHT))
+        screen.blit(background_image, (0, 0))
+        drawText(screen, "Chess Game", pygame.Color("#FFFFCC"), (WIDTH // 2, HEIGHT // 4), 60)
+        
+        pygame.draw.rect(screen, pygame.Color("#FFFFCC"), (125, 200, 250, 50))
+        drawText(screen, "Play with Bot", pygame.Color("#666666"), (250, 225))
+        
+        pygame.draw.rect(screen, pygame.Color("#FFFFCC"), (125, 300, 250, 50))
+        drawText(screen, "Play with Human", pygame.Color("#666666"), (250, 325))
+        
+        pygame.display.flip()
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:  
+                    x, y = event.pos
+                    if 150 <= x <= 350 and 200 <= y <= 250:  
+                        return "bot"
+                    elif 150 <= x <= 350 and 300 <= y <= 350:  
+                        return "human"
+
+def receive_data(client, gs, validMoves):
+    global moveMade, animate
+    while True:
+        try:
+            data = client.recv(4096)
+            if data:
+                move = pickle.loads(data)
+                print(f"Nước đi từ đối thủ: {move.getChessNotation()}")
+                gs.makeMove(move)
+                moveMade = True
+                animate = True
+        except:
+            print("Mất kết nối với server")
+            client.close()
+            break
+
+def send_data(client, data):
+    try:
+        serialized_data = pickle.dumps(data)
+        client.send(serialized_data)
+    except Exception as e:
+        print(f"Không thể gửi dữ liệu: {e}")
 
 def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
     screen.fill(pygame.Color("white"))
-    
+
     gs = engine.GameState()
     validMoves = gs.getValidMoves()
     moveMade = False
@@ -60,94 +80,21 @@ def main():
     sqSelected = ()
     playerClicks = []
     gameOver = False
-    
+
     playerOne = True
     playerTwo = False
-    
-    while run:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if not gameOver:
-                    location = pygame.mouse.get_pos()  
-                    col = location[0] // SQ_SIZE
-                    row = location[1] // SQ_SIZE
-                    if sqSelected == (row, col):  
-                        sqSelected = ()  
-                        playerClicks = []  
-                    else:
-                        sqSelected = (row, col)
-                        playerClicks.append(sqSelected)  
-                    if len(playerClicks) == 2:  
-                        move = engine.Move(playerClicks[0], playerClicks[1], gs.board)
-                        print(move.getChessNotation())
-                        for i in range(len(validMoves)):
-                            if move == validMoves[i]:
-                                gs.makeMove(validMoves[i])
-                                moveMade = True
-                                animate = True
-                                sqSelected = ()  
-                                playerClicks = []
-                        if not moveMade:
-                            playerClicks = [sqSelected]
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_z:  
-                    gs.undoMove()
-                    moveMade = True
-                    animate = False
-                if event.key == pygame.K_r:  
-                    gs = engine.GameState()
-                    validMoves = gs.getValidMoves()
-                    sqSelected = ()
-                    playerClicks = []
-                    moveMade = False
-                    animate = False
 
-        if moveMade:
-            if animate:
-                animateMove(gs.moveLog[-1], screen, gs.board, clock)
-            validMoves = gs.getValidMoves()
-            moveMade = False
-            animate = False
+    # Kết nối tới server
+    HOST = '192.168.1.20'  # Địa chỉ IP của server
+    PORT = 5050
 
-        drawGameState(screen, gs, validMoves, sqSelected)
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect((HOST, PORT))
 
-        if gs.checkmate:
-            gameOver = True
-            if gs.whiteToMove:
-                drawText(screen, "Black wins by checkmate", pygame.Color("black"), (WIDTH // 2, HEIGHT // 2))
-            else:
-                drawText(screen, "White wins by checkmate", pygame.Color("black"), (WIDTH // 2, HEIGHT // 2))
-        elif gs.stalemate:
-            gameOver = True
-            drawText(screen, "Stalemate", pygame.Color("black"), (WIDTH // 2, HEIGHT // 2))
+    # Bắt đầu luồng để nhận dữ liệu từ server
+    receive_thread = threading.Thread(target=receive_data, args=(client, gs, validMoves))
+    receive_thread.start()
 
-        clock.tick(MAX_FPS)
-        pygame.display.flip()
-
-    pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    clock = pygame.time.Clock()
-    screen.fill(pygame.Color("white"))
-    
-    gs = engine.GameState()
-    validMoves = gs.getValidMoves()
-    moveMade = False
-    animate = False
-    loadImages()
-    run = True
-    sqSelected = ()
-    playerClicks = []
-    gameOver = False
-    
-    playerOne = True
-    playerTwo = False
-    
-    mode = "human"  # Chỉ chơi giữa hai người qua mạng
-    
-    
-    
     while run:
         humanTurn = (gs.whiteToMove and playerOne) or (not gs.whiteToMove and playerTwo)
         for event in pygame.event.get():
@@ -156,112 +103,35 @@ def main():
                 client.close()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if not gameOver and humanTurn:
-                    location = pygame.mouse.get_pos()  
+                    location = pygame.mouse.get_pos()
                     col = location[0] // SQ_SIZE
                     row = location[1] // SQ_SIZE
-                    if sqSelected == (row, col):  
-                        sqSelected = ()  
-                        playerClicks = []  
+                    if sqSelected == (row, col):
+                        sqSelected = ()
+                        playerClicks = []
                     else:
                         sqSelected = (row, col)
-                        playerClicks.append(sqSelected)  
-                    if len(playerClicks) == 2:  
+                        playerClicks.append(sqSelected)
+                    if len(playerClicks) == 2:
                         move = engine.Move(playerClicks[0], playerClicks[1], gs.board)
-                        print(move.getChessNotation())
                         for i in range(len(validMoves)):
                             if move == validMoves[i]:
                                 gs.makeMove(validMoves[i])
+                                send_data(client, validMoves[i])
                                 moveMade = True
                                 animate = True
-                                sqSelected = ()  
+                                sqSelected = ()
                                 playerClicks = []
+                                playerOne = not playerOne
+                                playerTwo = not playerTwo
                         if not moveMade:
                             playerClicks = [sqSelected]
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_z:  
+                if event.key == pygame.K_z:
                     gs.undoMove()
                     moveMade = True
                     animate = False
-                if event.key == pygame.K_r:  
-                    gs = engine.GameState()
-                    validMoves = gs.getValidMoves()
-                    sqSelected = ()
-                    playerClicks = []
-                    moveMade = False
-                    animate = False
-
-        if moveMade:
-            if animate:
-                animateMove(gs.moveLog[-1], screen, gs.board, clock)
-            validMoves = gs.getValidMoves()
-            moveMade = False
-            animate = False
-
-        drawGameState(screen, gs, validMoves, sqSelected)
-
-        if gs.checkmate:
-            gameOver = True
-            if gs.whiteToMove:
-                drawText(screen, "Black wins by checkmate", pygame.Color("black"), (WIDTH // 2, HEIGHT // 2))
-            else:
-                drawText(screen, "White wins by checkmate", pygame.Color("black"), (WIDTH // 2, HEIGHT // 2))
-        elif gs.stalemate:
-            gameOver = True
-            drawText(screen, "Stalemate", pygame.Color("black"), (WIDTH // 2, HEIGHT // 2))
-
-        clock.tick(MAX_FPS)
-        pygame.display.flip()
-    pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    clock = pygame.time.Clock()
-    screen.fill(pygame.Color("white"))
-    
-    gs = engine.GameState()
-    validMoves = gs.getValidMoves()
-    moveMade = False
-    animate = False
-    loadImages()
-    run = True
-    sqSelected = ()
-    playerClicks = []
-    gameOver = False
-    
-    playerOne = True
-    playerTwo = False
-    
-    mode = "human"  # Chỉ chơi giữa hai người qua mạng
-    
-    receive_thread = threading.Thread(target=receive_data)
-    receive_thread.start()
-
-    while run:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if not gameOver and mode == "human":
-                    if playerOne:  # Chỉ cho phép người chơi 1 di chuyển
-                        location = pygame.mouse.get_pos()
-                        col = location[0] // SQ_SIZE
-                        row = location[1] // SQ_SIZE
-                        if sqSelected == (row, col):  
-                            sqSelected = ()  
-                            playerClicks = []  
-                        else:
-                            sqSelected = (row, col)
-                            playerClicks.append(sqSelected)  
-                        if len(playerClicks) == 2:  
-                            move = engine.Move(playerClicks[0], playerClicks[1], gs.board)
-                            # Gửi bước di chuyển đến máy chủ
-                            client.send(pickle.dumps(move))
-                            playerOne = False
-                            playerTwo = True
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_z:  
-                    gs.undoMove()
-                    moveMade = True
-                    animate = False
-                if event.key == pygame.K_r:  
+                if event.key == pygame.K_r:
                     gs = engine.GameState()
                     validMoves = gs.getValidMoves()
                     sqSelected = ()
@@ -293,8 +163,6 @@ def main():
 
     pygame.quit()
 
-    # Đóng kết nối với máy chủ khi thoát khỏi game
-    client.close()    
 def highlightSquares(screen, gs, validMoves, sqSelected):
     if sqSelected != ():
         r, c = sqSelected

@@ -20,9 +20,10 @@ def handle_client(conn, addr):
             if not data:
                 break
             broadcast(data, conn)
-            decoded_data = pickle.loads(data)  # Giải mã dữ liệu
-            print(f"Dữ liệu từ {addr}: {decoded_data}")
+            move = pickle.loads(data)
+            print(f"Nước đi từ {addr}: {move}")
         except:
+            print(f"Client mất kết nối: {addr[0]}")
             clients.remove(conn)
             conn.close()
             break
@@ -37,7 +38,7 @@ def broadcast(data, conn):
                 client.close()
 
 def main():
-    print("Server đang chạy..."+ HOST)
+    print("Server đang chạy... " + HOST)
     while True:
         conn, addr = server.accept()
         clients.append(conn)
