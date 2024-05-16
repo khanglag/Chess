@@ -16,31 +16,6 @@ def loadImages():
     for piece in pieces:
         IMAGES[piece] = pygame.transform.scale(pygame.image.load("images/" + piece + ".png"), (SQ_SIZE, SQ_SIZE))
 
-def menu(screen):
-    while True:
-        background_image = pygame.transform.scale(pygame.image.load("images/background.png"), (WIDTH, HEIGHT))
-        screen.blit(background_image, (0, 0))
-        drawText(screen, "Chess Game", pygame.Color("#FFFFCC"), (WIDTH // 2, HEIGHT // 4), 60)
-        
-        pygame.draw.rect(screen, pygame.Color("#FFFFCC"), (125, 200, 250, 50))
-        drawText(screen, "Play with Bot", pygame.Color("#666666"), (250, 225))
-        
-        pygame.draw.rect(screen, pygame.Color("#FFFFCC"), (125, 300, 250, 50))
-        drawText(screen, "Play with Human", pygame.Color("#666666"), (250, 325))
-        
-        pygame.display.flip()
-        
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:  
-                    x, y = event.pos
-                    if 150 <= x <= 350 and 200 <= y <= 250:  
-                        return "bot"
-                    elif 150 <= x <= 350 and 300 <= y <= 350:  
-                        return "human"
 
 def receive_data(client, gs, validMoves):
     global moveMade, animate
