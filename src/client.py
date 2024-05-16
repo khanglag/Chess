@@ -11,6 +11,7 @@ SQ_SIZE = HEIGHT // DIMENSION
 MAX_FPS = 15
 IMAGES = {}
 
+
 def loadImages():
     pieces = ['wp', 'wR', 'wN', 'wB', 'wK', 'wQ', 'bp', 'bR', 'bN', 'bB', 'bK', 'bQ']
     for piece in pieces:
@@ -18,18 +19,20 @@ def loadImages():
 
 
 def receive_data(client, gs, validMoves):
-    global moveMade, animate
+    global moveMade, animate , playerOne, playerTwo
     while True:
         try:
             data = client.recv(4096)
             if data:
                 move = pickle.loads(data)
                 print(f"Nước đi từ đối thủ: {move.getChessNotation()}")
-                gs.makeMove(move)
-                moveMade = True
-                animate = True
-        except:
+                # gs.makeMove(move)
+                # moveMade = True
+                # animate = True
+                # print("playerOne: " + playerOne)
+        except Exception as e:
             print("Mất kết nối với server")
+            print(f"Error: {e}")
             client.close()
             break
 
@@ -55,9 +58,9 @@ def main():
     sqSelected = ()
     playerClicks = []
     gameOver = False
-
     playerOne = True
     playerTwo = False
+
 
     # Kết nối tới server
     HOST = '192.168.1.20'  # Địa chỉ IP của server
