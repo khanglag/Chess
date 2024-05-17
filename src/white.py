@@ -11,12 +11,10 @@ SQ_SIZE = HEIGHT // DIMENSION
 MAX_FPS = 15
 IMAGES = {}
 
-
 def loadImages():
     pieces = ['wp', 'wR', 'wN', 'wB', 'wK', 'wQ', 'bp', 'bR', 'bN', 'bB', 'bK', 'bQ']
     for piece in pieces:
         IMAGES[piece] = pygame.transform.scale(pygame.image.load("images/" + piece + ".png"), (SQ_SIZE, SQ_SIZE))
-
 
 def receive_data(client, gs, validMoves):
     global moveMade, animate
@@ -44,6 +42,10 @@ def send_data(client, data):
         print(f"Không thể gửi dữ liệu: {e}")
 
 def main():
+    global moveMade, animate
+    moveMade = False
+    animate = False
+
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
@@ -51,8 +53,6 @@ def main():
 
     gs = engine.GameState()
     validMoves = gs.getValidMoves()
-    moveMade = False
-    animate = False
     loadImages()
     run = True
     sqSelected = ()
@@ -99,8 +99,6 @@ def main():
                                 animate = True
                                 sqSelected = ()
                                 playerClicks = []
-                                playerOne = not playerOne
-                                playerTwo = not playerTwo
                         if not moveMade:
                             playerClicks = [sqSelected]
             elif event.type == pygame.KEYDOWN:
@@ -139,7 +137,6 @@ def main():
         pygame.display.flip()
 
     pygame.quit()
-
 
 def highlightSquares(screen, gs, validMoves, sqSelected):
     if sqSelected != ():

@@ -58,8 +58,9 @@ def main():
     sqSelected = ()
     playerClicks = []
     gameOver = False
-    playerOne = True
-    playerTwo = False
+    playerOne = False
+    playerTwo = True
+
 
     # Kết nối tới server
     HOST = '192.168.2.228'  # Địa chỉ IP của server

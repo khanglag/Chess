@@ -11,12 +11,10 @@ SQ_SIZE = HEIGHT // DIMENSION
 MAX_FPS = 15
 IMAGES = {}
 
-
 def loadImages():
     pieces = ['wp', 'wR', 'wN', 'wB', 'wK', 'wQ', 'bp', 'bR', 'bN', 'bB', 'bK', 'bQ']
     for piece in pieces:
         IMAGES[piece] = pygame.transform.scale(pygame.image.load("images/" + piece + ".png"), (SQ_SIZE, SQ_SIZE))
-
 
 def receive_data(client, gs, validMoves):
     global moveMade, animate
@@ -29,10 +27,9 @@ def receive_data(client, gs, validMoves):
                 gs.makeMove(move)
                 moveMade = True
                 animate = True
-
         except Exception as e:
             print("Mất kết nối với server")
-            print(f"Error: {e}")
+            print(f"Lỗi: {e}")
             client.close()
             break
 
@@ -51,6 +48,7 @@ def main():
 
     gs = engine.GameState()
     validMoves = gs.getValidMoves()
+    global moveMade, animate
     moveMade = False
     animate = False
     loadImages()
@@ -58,8 +56,8 @@ def main():
     sqSelected = ()
     playerClicks = []
     gameOver = False
-    playerOne = True
-    playerTwo = False
+    playerOne = False  # Đổi thành True nếu client này chơi quân trắng
+    playerTwo = True   # Đổi thành True nếu client này chơi quân đen
 
     # Kết nối tới server
     HOST = '192.168.2.228'  # Địa chỉ IP của server
@@ -74,6 +72,8 @@ def main():
 
     while run:
         humanTurn = (gs.whiteToMove and playerOne) or (not gs.whiteToMove and playerTwo)
+        print(f"Lượt của người chơi: {humanTurn}, Lượt của trắng: {gs.whiteToMove}, Người chơi một: {playerOne}")
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -99,8 +99,6 @@ def main():
                                 animate = True
                                 sqSelected = ()
                                 playerClicks = []
-                                playerOne = not playerOne
-                                playerTwo = not playerTwo
                         if not moveMade:
                             playerClicks = [sqSelected]
             elif event.type == pygame.KEYDOWN:
@@ -139,7 +137,6 @@ def main():
         pygame.display.flip()
 
     pygame.quit()
-
 
 def highlightSquares(screen, gs, validMoves, sqSelected):
     if sqSelected != ():
