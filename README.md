@@ -71,6 +71,7 @@ chạy file game.py và chọn chế độ chơi với người
   
 ## Đóng góp
 ## Giấy phép
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 ## Liên hệ
 - Nguyễn Kế Cường - 3121410097
 - Đỗ Minh Khang - 3121410007
