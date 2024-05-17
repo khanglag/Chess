@@ -326,7 +326,7 @@ def black():
 
     while run:
         humanTurn = (gs.whiteToMove and playerOne) or (not gs.whiteToMove and playerTwo)
-       
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
