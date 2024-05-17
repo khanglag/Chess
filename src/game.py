@@ -26,6 +26,8 @@ def menu(screen):
         pygame.draw.rect(screen, pygame.Color("#FFFFCC"), (125, 300, 250, 50))
         drawText(screen, "Play with Human", pygame.Color("#666666"), (250, 325))
         
+        pygame.draw.rect(screen, pygame.Color("#FFFFCC"), (125, 400, 250, 50))
+        drawText(screen, "Play with Human", pygame.Color("#666666"), (250, 425))
         pygame.display.flip()
         
         for event in pygame.event.get():
@@ -37,6 +39,8 @@ def menu(screen):
                     x, y = event.pos
                     if 150 <= x <= 350 and 200 <= y <= 250:  
                         return "bot"
+                    elif 150 <= x <= 350 and 300 <= y <= 350:  
+                        return "human"
                     elif 150 <= x <= 350 and 300 <= y <= 350:  
                         return "human"
 

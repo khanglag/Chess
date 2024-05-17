@@ -27,7 +27,6 @@ def receive_data(client, gs, validMoves):
                 gs.makeMove(move)
                 moveMade = True
                 animate = True
-
         except Exception as e:
             print("Mất kết nối với server")
             print(f"Error: {e}")
