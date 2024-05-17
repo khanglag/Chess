@@ -82,7 +82,7 @@ def menuSocket(screen):
         drawText(screen, "Chess Game", pygame.Color("#FFFFCC"), (WIDTH // 2, HEIGHT // 4), 60)
 
         pygame.draw.rect(screen, pygame.Color("#FFFFCC"), (125, 200, 250, 50))
-        drawText(screen, "While", pygame.Color("#666666"), (250, 225))
+        drawText(screen, "White", pygame.Color("#666666"), (250, 225))
 
         pygame.draw.rect(screen, pygame.Color("#FFFFCC"), (125, 300, 250, 50))
         drawText(screen, "Black", pygame.Color("#666666"), (250, 325))
