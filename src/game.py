@@ -270,18 +270,6 @@ def white():
                                 playerClicks = []
                         if not moveMade:
                             playerClicks = [sqSelected]
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_z:
-                    gs.undoMove()
-                    moveMade = True
-                    animate = False
-                if event.key == pygame.K_r:
-                    gs = engine.GameState()
-                    validMoves = gs.getValidMoves()
-                    sqSelected = ()
-                    playerClicks = []
-                    moveMade = False
-                    animate = False
 
         if moveMade:
             if animate:
@@ -338,8 +326,7 @@ def black():
 
     while run:
         humanTurn = (gs.whiteToMove and playerOne) or (not gs.whiteToMove and playerTwo)
-        print(f"Lượt của người chơi: {humanTurn}, Lượt của trắng: {gs.whiteToMove}, Người chơi một: {playerOne}")
-
+       
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -367,18 +354,7 @@ def black():
                                 playerClicks = []
                         if not moveMade:
                             playerClicks = [sqSelected]
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_z:
-                    gs.undoMove()
-                    moveMade = True
-                    animate = False
-                if event.key == pygame.K_r:
-                    gs = engine.GameState()
-                    validMoves = gs.getValidMoves()
-                    sqSelected = ()
-                    playerClicks = []
-                    moveMade = False
-                    animate = False
+
 
         if moveMade:
             if animate:
